@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chatbot with Video</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            height: 100vh;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .chat-container {
+            width: 45%;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+            height: 90vh;
+            overflow-y: auto;
+        }
+        .video-container {
+            width: 50%;
+            text-align: center;
+        }
+        iframe {
+            width: 100%;
+            height: 400px;
+            border-radius: 10px;
+        }
+        input {
+            width: calc(100% - 60px);
+            padding: 10px;
+            margin-top: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button {
+            padding: 10px;
+            margin-left: 5px;
+            cursor: pointer;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        .message-box {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 14px;
+            line-height: 1.5;
+            word-wrap: break-word;
+            max-width: 100%;
+        }
+        .user-message {
+            background: #d1e7dd;
+            text-align: right;
+            color: #155724;
+        }
+        .ai-message {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .bold {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Chatbot Response Section -->
+    <div class="chat-container">
+        <h2>AI Chatbot</h2>
+        <div id="chat-box"></div>
+        <input type="text" id="user-input" placeholder="Ask something..." onkeypress="handleKeyPress(event)">
+        <button onclick="sendMessage()">Send</button>
+    </div>
+
+    <!-- Video Section -->
+    <div class="video-container">
+        <h2>Video Result</h2>
+        <iframe id="videoFrame" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+    </div>
+
+    <script>
+        function handleKeyPress(event) {
+            if (event.key === "Enter") {
+                sendMessage();
+            }
+        }
+
+        function sendMessage() {
+            let userInput = document.getElementById("user-input").value;
+            if (userInput.trim() === "") return;
+
+            let chatBox = document.getElementById("chat-box");
+            let userMessage = `<div class="message-box user-message"><strong>You:</strong> ${userInput}</div>`;
+            chatBox.innerHTML += userMessage;
+
+            fetch("/chat", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ question: userInput })
+            })
+            .then(response => response.json())
+            .then(data => {
+                let aiMessage = `<div class="message-box ai-message"><strong>AI:</strong> ${formatText(data.response)}</div>`;
+                chatBox.innerHTML += aiMessage;
+                document.getElementById("videoFrame").src = data.video_url; // Update video
+                document.getElementById("user-input").value = "";
+                chatBox.scrollTop = chatBox.scrollHeight;
+            });
+        }
+
+        function formatText(text) {
+            return text.replace(/\*\*(.*?)\*\*/g, '<span class="bold">$1</span>') // Bold **text**
+                       .replace(/\n/g, '<br>'); // New line formatting
+        }
+    </script>
+
+</body>
+</html>
+
